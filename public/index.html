@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FoodHealth - Find Healthier Groceries While You Shop</title>
+  <meta name="description" content="Get instant health scores while you shop on Target. Make smarter food choices for you and your family.">
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(117deg, rgba(136, 136, 255, 0.15) 0%, rgba(136, 136, 255, 0.00) 100%), #FFF;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    header {
+      padding: 24px 48px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .logo { height: 32px; }
+    
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 48px 24px;
+    }
+    
+    .emoji { font-size: 64px; margin-bottom: 24px; }
+    
+    h1 {
+      font-size: 48px;
+      font-weight: 700;
+      color: #1a1a1a;
+      margin-bottom: 16px;
+      line-height: 1.2;
+    }
+    
+    @media (max-width: 600px) {
+      h1 { font-size: 32px; }
+    }
+    
+    .highlight { color: #7C3AED; }
+    
+    p {
+      font-size: 20px;
+      color: #666;
+      max-width: 600px;
+      margin-bottom: 32px;
+      line-height: 1.6;
+    }
+    
+    .referrer-note {
+      background: #F3F0FF;
+      padding: 12px 24px;
+      border-radius: 12px;
+      color: #7C3AED;
+      font-weight: 500;
+      margin-bottom: 32px;
+      display: none;
+    }
+    
+    .cta-button {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      background: #7C3AED;
+      color: white;
+      padding: 18px 36px;
+      border-radius: 12px;
+      font-size: 18px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+    }
+    
+    .cta-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(124, 58, 237, 0.4);
+    }
+    
+    .chrome-icon { width: 24px; height: 24px; }
+    
+    .features {
+      display: flex;
+      gap: 48px;
+      margin-top: 64px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    
+    .feature { text-align: center; }
+    .feature-icon { font-size: 32px; margin-bottom: 12px; }
+    .feature-text { font-size: 14px; color: #666; }
+    
+    footer {
+      padding: 24px;
+      text-align: center;
+      color: #999;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <img src="/logo.svg" alt="FoodHealth" class="logo" onerror="this.style.display='none'">
+  </header>
+  
+  <main>
+    <div class="emoji">🥗</div>
+    <h1>Find <span class="highlight">Healthier</span> Groceries</h1>
+    <p>Get instant health scores while you shop on Target. Make smarter food choices for you and your family.</p>
+    
+    <div id="referrer-note" class="referrer-note">
+      Your friend invited you! 🎁
+    </div>
+    
+    <a href="https://chromewebstore.google.com/detail/foodhealth-ai-find-health/ocadbjdabcjjlghdgjjnefcjdkineaek" class="cta-button" id="cta-button">
+      <svg class="chrome-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"/>
+        <circle cx="12" cy="12" r="4" fill="currentColor"/>
+      </svg>
+      Add to Chrome - It's Free
+    </a>
+    
+    <div class="features">
+      <div class="feature">
+        <div class="feature-icon">📊</div>
+        <div class="feature-text">Health scores for every product</div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">🔄</div>
+        <div class="feature-text">Healthier swap suggestions</div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">🎯</div>
+        <div class="feature-text">Works on Target.com</div>
+      </div>
+    </div>
+  </main>
+  
+  <footer>
+    © 2026 FoodHealth Company. All rights reserved.
+  </footer>
+
+  <script>
+    (function() {
+      // CONFIG - Update with your actual values
+      const API_BASE_URL = 'https://fhs-cart-ext-platform-dev-608046295224.us-central1.run.app';
+      const REFERRAL_STORAGE_KEY = 'fhc_referral_code';
+      
+      // Extract referral code from URL path: /r/ABC123
+      function getReferralCode() {
+        const pathMatch = window.location.pathname.match(/\/r\/([A-Za-z0-9]+)/i);
+        if (pathMatch) return pathMatch[1].toUpperCase();
+        
+        const params = new URLSearchParams(window.location.search);
+        const ref = params.get('ref');
+        if (ref) return ref.toUpperCase();
+        
+        return null;
+      }
+      
+      // Log click to backend
+      async function logClick(code) {
+        try {
+          await fetch(`${API_BASE_URL}/api/referrals/click`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code })
+          });
+        } catch (error) {
+          console.error('Failed to log click:', error);
+        }
+      }
+      
+      // Store referral code for extension to read
+      function storeReferralCode(code) {
+        try {
+          localStorage.setItem(REFERRAL_STORAGE_KEY, code);
+          const expiryDate = new Date();
+          expiryDate.setDate(expiryDate.getDate() + 30);
+          document.cookie = `${REFERRAL_STORAGE_KEY}=${code}; expires=${expiryDate.toUTCString()}; path=/; SameSite=Lax`;
+        } catch (error) {
+          console.error('Failed to store referral code:', error);
+        }
+      }
+      
+      // Validate referral code and get referrer name
+      async function validateCode(code) {
+        try {
+          const response = await fetch(`${API_BASE_URL}/api/referrals/validate/${code}`);
+          return await response.json();
+        } catch (error) {
+          return { valid: false };
+        }
+      }
+      
+      // Main
+      async function init() {
+        const code = getReferralCode();
+        
+        if (code) {
+          storeReferralCode(code);
+          logClick(code);
+          
+          const validation = await validateCode(code);
+          if (validation.valid) {
+            const note = document.getElementById('referrer-note');
+            if (validation.referrerName) {
+              note.textContent = `${validation.referrerName} invited you! 🎁`;
+            }
+            note.style.display = 'block';
+          }
+        }
+      }
+      
+      init();
+    })();
+  </script>
+</body>
+</html>
+
