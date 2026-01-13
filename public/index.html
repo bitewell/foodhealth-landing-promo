@@ -160,9 +160,10 @@
 
   <script>
     (function() {
-      // CONFIG - Update with your actual values
+      // CONFIG
       const API_BASE_URL = 'https://fhs-cart-ext-platform-2mqwv6x7aq-uc.a.run.app';
       const REFERRAL_STORAGE_KEY = 'fhc_referral_code';
+      const EXTENSION_ID = 'ocadbjdabcjjlghdgjjnefcjdkineaek';
       
       // Extract referral code from URL path: /r/ABC123
       function getReferralCode() {
@@ -189,7 +190,7 @@
         }
       }
       
-      // Store referral code for extension to read
+      // Store referral code in localStorage (for content script capture)
       function storeReferralCode(code) {
         try {
           localStorage.setItem(REFERRAL_STORAGE_KEY, code);
@@ -198,6 +199,29 @@
           document.cookie = `${REFERRAL_STORAGE_KEY}=${code}; expires=${expiryDate.toUTCString()}; path=/; SameSite=Lax`;
         } catch (error) {
           console.error('Failed to store referral code:', error);
+        }
+      }
+      
+      // Send referral code directly to extension (if installed)
+      function sendCodeToExtension(code) {
+        if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
+          try {
+            chrome.runtime.sendMessage(
+              EXTENSION_ID,
+              { action: 'storeReferralCode', code: code },
+              function(response) {
+                if (chrome.runtime.lastError) {
+                  console.log('Extension not installed or not responding');
+                  return;
+                }
+                if (response && response.success) {
+                  console.log('Referral code sent to extension successfully');
+                }
+              }
+            );
+          } catch (e) {
+            // Extension not available
+          }
         }
       }
       
@@ -213,12 +237,27 @@
       
       // Main
       async function init() {
-        const code = getReferralCode();
+        // Get code from URL or localStorage
+        let code = getReferralCode();
+        
+        // If no code in URL, check localStorage (for popup capture scenario)
+        if (!code) {
+          code = localStorage.getItem(REFERRAL_STORAGE_KEY);
+        }
         
         if (code) {
+          // Store in localStorage for content script capture
           storeReferralCode(code);
-          logClick(code);
           
+          // Try to send directly to extension (most reliable when extension is installed)
+          sendCodeToExtension(code);
+          
+          // Log click (only if code came from URL, not localStorage)
+          if (getReferralCode()) {
+            logClick(code);
+          }
+          
+          // Show referrer name
           const validation = await validateCode(code);
           if (validation.valid) {
             const note = document.getElementById('referrer-note');
